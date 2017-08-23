@@ -3,13 +3,10 @@
  * npm install --save express body-parser nodemon morgan
  * npm install -g nodemon
  * 
- *  nodemon server.js
- */
 
 var express = require('express');
 var bodyParser = require('body-parser');
 var logger = require('morgan')
-require('@google-cloud/debug-agent').start();
 
 /* custom code */
 var chat = require('./function').chat

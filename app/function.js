@@ -45,6 +45,7 @@ function getKeyFromRequestData(requestData) {
         throw new Error('Key not provided. Make sure you have a "key" property in your request: ' + JSON.stringify(requestData.body));
     }
 
+
     if (!requestData.kind) {
         throw new Error('Kind not provided. Make sure you have a "kind" property in your request ' + JSON.stringify(requestData.body));
     }
@@ -66,8 +67,32 @@ function getKeyFromRequestData(requestData) {
  * @param {object} res Cloud Function response context.
  */
 
+/*
+function set(req, res) {
+    console.log('set');
+    // The value contains a JSON document representing the entity we want to save
+    if (!req.body.value) {
+        throw new Error('Value not provided. Make sure you have a "value" property in your request');
+    }
+
+    const key = getKeyFromRequestData(req.body);
+    const entity = {
+        key: key,
+        data: req.body.value
+    };
+
+    return datastore.save(entity)
+        .then(() => res.status(200).send(`Entity ${key.path.join('/')} saved.`))
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send(err);
+            return Promise.reject(err);
+        });
+};
+*/
+
 /**
- * Handles GET chat/:ID and POST chat/
+ * Retrieves a record.
  *
  * @example
  * gcloud beta functions call chat --data '{"kind":"Task","key":"sampletask1"}' --header "Content-Type: application/json"
@@ -86,7 +111,23 @@ exports.chat = function chat(req, res) {
     /* if GET verb */
     if (!Object.keys(req.body).length) {
         console.log('GET');
-        getChat(req, res);
+        /* Parse params to grab the /chat/:ID */
+        const query = datastore.createQuery('Text')
+            .filter('id', '=', req.params.id)
+            .order('id', { descending: true })
+
+        datastore.runQuery(query)
+            .then((results) => {
+                // Task entities found.
+                const texts = results[0];
+
+                console.log('Text:');
+                texts.forEach((text) => console.log(text));
+
+                console.log(texts);
+                res.status(200).send(texts);
+            }
+        );
     }
     else {
         console.log('POST');
@@ -95,27 +136,6 @@ exports.chat = function chat(req, res) {
     }
      
 };
-
-function getChat(req, res)
-{
-    /* Parse params to grab the /chat/:ID */
-    const query = datastore.createQuery('Text')
-        .filter('id', '=', req.params.id)
-        .order('id', { descending: true })
-
-    datastore.runQuery(query)
-        .then((results) => {
-            // Task entities found.
-            const texts = results[0];
-
-            console.log('Text:');
-            texts.forEach((text) => console.log(text));
-
-            console.log(texts);
-            res.status(200).send(texts);
-        }
-        );
-}
 
 function newChat(req, res) {
 
